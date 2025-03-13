@@ -1,9 +1,15 @@
 <template>
-  <!-- 加载 -->
+  <!-- 加载动画 -->
   <Loading />
-  <!-- 壁纸 -->
+  <!-- 背景壁纸 -->
   <Background @loadComplete="loadComplete" />
-  <!-- 主界面 -->
+  
+  <!-- 加载失败提示（新增） -->
+  <div v-if="!store.imgLoadStatus" class="load-fallback">
+    资源加载中，若长时间无响应请刷新页面
+  </div>
+
+  <!-- 主界面容器 -->
   <Transition name="fade" mode="out-in">
     <main id="main" v-if="store.imgLoadStatus">
       <div class="container" v-show="!store.backgroundShow">
@@ -16,6 +22,7 @@
           <MoreSet />
         </section>
       </div>
+
       <!-- 移动端菜单按钮 -->
       <Icon
         class="menu"
@@ -25,6 +32,7 @@
       >
         <component :is="store.mobileOpenState ? CloseSmall : HamburgerButton" />
       </Icon>
+
       <!-- 页脚 -->
       <Transition name="fade" mode="out-in">
         <Footer v-show="!store.backgroundShow && !store.setOpenState" />
@@ -32,11 +40,13 @@
     </main>
   </Transition>
 </template>
+
 <script setup>
-import { helloInit, checkDays } from "@/utils/getTime.js";
+import { nextTick, watch, onMounted, onBeforeUnmount } from "vue";
 import { HamburgerButton, CloseSmall } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { Icon } from "@vicons/utils";
+import { ElMessage } from "element-plus";
 import Loading from "@/components/Loading.vue";
 import MainLeft from "@/views/Main/Left.vue";
 import MainRight from "@/views/Main/Right.vue";
@@ -44,23 +54,23 @@ import Background from "@/components/Background.vue";
 import Footer from "@/components/Footer.vue";
 import Box from "@/views/Box/index.vue";
 import MoreSet from "@/views/MoreSet/index.vue";
+import { helloInit, checkDays } from "@/utils/getTime.js";
 import cursorInit from "@/utils/cursor.js";
 import config from "@/../package.json";
 
 const store = mainStore();
 
-// 页面宽度
+// 页面宽度监听
 const getWidth = () => {
   store.setInnerWidth(window.innerWidth);
 };
 
-// 加载完成事件
+// 壁纸加载完成事件（关键修改）
 const loadComplete = () => {
   nextTick(() => {
-    // 欢迎提示
-    helloInit();
-    // 默哀模式
-    checkDays();
+    store.imgLoadStatus = true; // 显式更新加载状态
+    helloInit(); // 欢迎语
+    checkDays(); // 日期检查
   });
 };
 
@@ -69,16 +79,17 @@ watch(
   () => store.innerWidth,
   (value) => {
     if (value < 990) {
-      store.boxOpenState = false;
+      store.boxOpenState = false; // 移动端自动关闭盒子
     }
-  },
+  }
 );
 
+// 生命周期钩子
 onMounted(() => {
-  // 自定义鼠标
+  // 自定义光标
   cursorInit();
 
-  // 屏蔽右键
+  // 屏蔽右键菜单
   document.oncontextmenu = () => {
     ElMessage({
       message: "为了浏览体验，本站禁用右键",
@@ -88,9 +99,9 @@ onMounted(() => {
     return false;
   };
 
-  // 鼠标中键事件
+  // 鼠标中键切换壁纸状态
   window.addEventListener("mousedown", (event) => {
-    if (event.button == 1) {
+    if (event.button === 1) {
       store.backgroundShow = !store.backgroundShow;
       ElMessage({
         message: `已${store.backgroundShow ? "开启" : "退出"}壁纸展示状态`,
@@ -99,11 +110,11 @@ onMounted(() => {
     }
   });
 
-  // 监听当前页面宽度
+  // 初始化宽度监听
   getWidth();
   window.addEventListener("resize", getWidth);
 
-  // 控制台输出
+  // 控制台艺术字
   const styleTitle1 = "font-size: 20px;font-weight: 600;color: rgb(244,167,89);";
   const styleTitle2 = "font-size:12px;color: rgb(244,167,89);";
   const styleContent = "color: rgb(30,152,255);";
@@ -131,14 +142,18 @@ onBeforeUnmount(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  transform: scale(1.2);
+  transform: scale(1); // 移除缩放动画（原为 1.2）
+  overflow: visible; // 确保子元素可见（新增）
+  z-index: 1; // 层级控制（新增）
   transition: transform 0.3s;
   animation: fade-blur-main-in 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
   animation-delay: 0.5s;
+
   .container {
     width: 100%;
     height: 100vh;
     margin: 0 auto;
+    
     .all {
       width: 100%;
       height: 100%;
@@ -148,6 +163,7 @@ onBeforeUnmount(() => {
       justify-content: center;
       align-items: center;
     }
+
     .more {
       position: fixed;
       top: 0;
@@ -159,10 +175,12 @@ onBeforeUnmount(() => {
       z-index: 2;
       animation: fade 0.5s;
     }
+
     @media (max-width: 1200px) {
       padding: 0 2vw;
     }
   }
+
   .menu {
     position: fixed;
     display: flex;
@@ -177,15 +195,37 @@ onBeforeUnmount(() => {
     border-radius: 6px;
     transition: transform 0.3s;
     animation: fade 0.5s;
+    
     &:active {
       transform: scale(0.95);
     }
+    
     .i-icon {
       transform: translateY(2px);
     }
+
     @media (min-width: 721px) {
       display: none;
     }
   }
+}
+
+// 加载失败提示样式（新增）
+.load-fallback {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  z-index: 9999;
+  font-size: 1.2rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.8; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
 }
 </style>
