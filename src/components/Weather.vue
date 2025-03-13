@@ -1,15 +1,15 @@
 <template>
-  <div class="weather" v-if="weatherData.city && weatherData.type">
-    <span>{{ weatherData.city }}&nbsp;</span>
-    <span>{{ weatherData.type }}&nbsp;</span>
-    <span>{{ weatherData.temperature }}℃</span>
-    <span class="sm-hidden">
+  <div class="weather">
+    <span v-if="weatherData.city">{{ weatherData.city }}&nbsp;</span>
+    <span v-if="weatherData.type">{{ weatherData.type }}&nbsp;</span>
+    <span v-if="weatherData.temperature">{{ weatherData.temperature }}℃</span>
+    <span class="sm-hidden" v-if="weatherData.fengxiang">
       &nbsp;{{ weatherData.fengxiang }}&nbsp;
     </span>
-    <span class="sm-hidden">{{ weatherData.fengli.split('-')[0] }}&nbsp;级</span>
-  </div>
-  <div class="weather" v-else>
-    <span>天气数据获取失败</span>
+    <span class="sm-hidden" v-if="weatherData.fengli">
+      {{ weatherData.fengli.split('-')[0] }}&nbsp;级
+    </span>
+    <span v-if="!weatherData.city && !weatherData.type">天气数据获取失败</span>
   </div>
 </template>
 
@@ -48,29 +48,37 @@ const getWeatherData = async () => {
       console.log("未配置高德 Key，使用备用天气接口");
       const result = await getVvhanWeather();
       console.log(result);
-      const data = result.data;
-      weatherData.city = data.city || "未知地区";
-      weatherData.type = data.type;
-      weatherData.temperature = getTemperature(
-        data.low.replace("°C", ""),
-        data.high.replace("°C", "")
-      );
-      weatherData.fengxiang = data.fengxiang;
-      weatherData.fengli = data.fengli;
+      if (result && result.data) {
+        const data = result.data;
+        weatherData.city = data.city || "未知地区";
+        weatherData.type = data.type;
+        weatherData.temperature = getTemperature(
+          data.low.replace("°C", ""),
+          data.high.replace("°C", "")
+        );
+        weatherData.fengxiang = data.fengxiang;
+        weatherData.fengli = data.fengli;
+      } else {
+        throw new Error("获取天气数据失败");
+      }
     } else {
       // 获取 Adcode
       const adCode = await getAdcode(mainKey);
       console.log(adCode);
       if (adCode.infocode !== "10000") {
-        throw "地区查询失败";
+        throw new Error("地区查询失败");
       }
       weatherData.city = adCode.city;
       // 获取天气信息
       const result = await getAmapWeather(mainKey, adCode.adcode);
-      weatherData.type = result.lives[0].weather;
-      weatherData.temperature = result.lives[0].temperature;
-      weatherData.fengxiang = result.lives[0].winddirection;
-      weatherData.fengli = result.lives[0].windpower;
+      if (result && result.lives && result.lives[0]) {
+        weatherData.type = result.lives[0].weather;
+        weatherData.temperature = result.lives[0].temperature;
+        weatherData.fengxiang = result.lives[0].winddirection;
+        weatherData.fengli = result.lives[0].windpower;
+      } else {
+        throw new Error("获取天气数据失败");
+      }
     }
   } catch (error) {
     console.error("天气信息获取失败:" + error);
