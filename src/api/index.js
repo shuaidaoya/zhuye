@@ -69,7 +69,19 @@ export const getWeather = async (key, city) => {
 
 // 获取韩小韩天气 API
 // https://api.vvhan.com/api/weather
-export const getOtherWeather = async () => {
-  const res = await fetch("https://api.vvhan.com/api/weather");
-  return await res.json();
+export const getWeather = async () => {
+  const url = 'https://api.vvhan.com/api/weather';
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success) {
+      return data;
+    } else {
+      console.error('获取天气数据失败:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('请求天气数据时出错:', error);
+    return null;
+  }
 };
