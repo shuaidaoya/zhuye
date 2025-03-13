@@ -68,7 +68,6 @@ export const getWeather = async (key, city) => {
 };
 */
 // 获取韩小韩天气 API
-// https://api.vvhan.com/api/weather
 export const getWeather = async () => {
   const url = 'https://api.vvhan.com/api/weather';
   try {
