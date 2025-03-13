@@ -52,7 +52,7 @@ export const getHitokoto = async () => {
 /**
  * 天气
  */
-
+/*
 // 获取高德地理位置信息
 export const getAdcode = async (key) => {
   const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
@@ -66,7 +66,7 @@ export const getWeather = async (key, city) => {
   );
   return await res.json();
 };
-
+*/
 // 获取韩小韩天气 API
 // https://api.vvhan.com/api/weather
 export const getWeather = async () => {
