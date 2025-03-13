@@ -9,7 +9,7 @@
     <span class="sm-hidden" v-if="weatherData.fengli">
       {{ weatherData.fengli.split('-')[0] }}&nbsp;级
     </span>
-    <span v-if="!weatherData.city && !weatherData.type">天气数据获取失败</span>
+    <span v-if="!weatherData.city || !weatherData.type">天气数据获取失败</span>
   </div>
 </template>
 
