@@ -18,7 +18,7 @@
 </template>
 
 <script setup>
-import { getAdcode, getWeather, getOtherWeather } from "@/api";
+import { getAdcode, getWeather } from "@/api";
 import { Error } from "@icon-park/vue-next";
 
 // 高德开发者 Key
@@ -55,19 +55,19 @@ const getWeatherData = async () => {
   try {
     // 获取地理位置信息
     if (!mainKey) {
-      console.log("未配置，使用备用天气接口");
-      const result = await getOtherWeather();
+      console.log("未配置高德 Key，使用备用天气接口");
+      const result = await getWeather(); // 使用已导出的 getWeather 函数
       console.log(result);
-      const data = result.result;
+      const data = result.data;
       weatherData.adCode = {
-        city: data.city.City || "未知地区",
+        city: data.city || "未知地区",
         // adcode: data.city.cityId,
       };
       weatherData.weather = {
-        weather: data.condition.day_weather,
-        temperature: getTemperature(data.condition.min_degree, data.condition.max_degree),
-        winddirection: data.condition.day_wind_direction,
-        windpower: data.condition.day_wind_power,
+        weather: data.type,
+        temperature: getTemperature(data.low.replace("°C", ""), data.high.replace("°C", "")),
+        winddirection: data.fengxiang,
+        windpower: data.fengli.split("-")[0],
       };
     } else {
       // 获取 Adcode
