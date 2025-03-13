@@ -4,11 +4,6 @@
   <!-- 背景壁纸 -->
   <Background @loadComplete="loadComplete" />
   
-  <!-- 加载失败提示（新增） -->
-  <div v-if="!store.imgLoadStatus" class="load-fallback">
-    资源加载中，若长时间无响应请刷新页面
-  </div>
-
   <!-- 主界面容器 -->
   <Transition name="fade" mode="out-in">
     <main id="main" v-if="store.imgLoadStatus">
