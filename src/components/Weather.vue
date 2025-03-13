@@ -1,105 +1,105 @@
 <template>
   <div class="weather">
-    <span v-if="weatherData.city">{{ weatherData.city }}&nbsp;</span>
-    <span v-if="weatherData.type">{{ weatherData.type }}&nbsp;</span>
-    <span v-if="weatherData.temperature">{{ weatherData.temperature }}℃</span>
-    <span class="sm-hidden" v-if="weatherData.fengxiang">
-      &nbsp;{{ weatherData.fengxiang }}&nbsp;
-    </span>
-    <span class="sm-hidden" v-if="weatherData.fengli">
-      {{ weatherData.fengli.split('-')[0] }}&nbsp;级
-    </span>
-    <span v-if="!weatherData.city || !weatherData.type">天气数据获取失败</span>
+    <span v-if="weatherData.loading">加载中...</span>
+    <template v-else>
+      <span v-if="weatherData.city">{{ weatherData.city }}&nbsp;</span>
+      <span v-if="weatherData.type">{{ weatherData.type }}&nbsp;</span>
+      <span v-if="weatherData.temperature">{{ weatherData.temperature }}</span>
+      <span class="sm-hidden" v-if="weatherData.fengxiang">
+        &nbsp;{{ weatherData.fengxiang }}&nbsp;
+      </span>
+      <span class="sm-hidden" v-if="weatherData.fengli">
+        {{ weatherData.fengli.split('-')[0] }}&nbsp;级
+      </span>
+      <span v-if="!weatherData.city || !weatherData.type">天气数据获取失败</span>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { getAdcode, getAmapWeather, getVvhanWeather } from "@/api";
 import { Error } from "@icon-park/vue-next";
+import { reactive, onMounted, h } from "vue";
+import { ElMessage } from "element-plus";
 
-// 高德开发者 Key
 const mainKey = import.meta.env.VITE_WEATHER_KEY;
 
-// 天气数据
 const weatherData = reactive({
-  city: null, // 城市
-  type: null, // 天气现象
-  temperature: null, // 实时气温
-  fengxiang: null, // 风向描述
-  fengli: null, // 风力级别
+  loading: true,
+  city: null,
+  type: null,
+  temperature: null,
+  fengxiang: null,
+  fengli: null,
 });
 
-// 取出天气平均值
 const getTemperature = (min, max) => {
-  try {
-    // 计算平均值并四舍五入
-    const average = (Number(min) + Number(max)) / 2;
-    return Math.round(average);
-  } catch (error) {
-    console.error("计算温度出现错误：", error);
-    return "NaN";
-  }
+  const numMin = parseFloat(min?.replace(/[^0-9.-]/g, ''));
+  const numMax = parseFloat(max?.replace(/[^0-9.-]/g, ''));
+  
+  if (isNaN(numMin)) return numMax !== undefined ? `${numMax}℃` : 'N/A';
+  if (isNaN(numMax)) return numMin !== undefined ? `${numMin}℃` : 'N/A';
+  
+  return `${Math.round((numMin + numMax) / 2)}℃`;
 };
 
-// 获取天气数据
 const getWeatherData = async () => {
   try {
     if (!mainKey) {
-      console.log("未配置高德 Key，使用备用天气接口");
+      console.log("使用韩小韩备用接口");
       const result = await getVvhanWeather();
-      console.log(result);
-      if (result && result.data) {
-        const data = result.data;
-        weatherData.city = data.city || "未知地区";
-        weatherData.type = data.type;
+      if (result?.success) {
+        // 修正城市字段路径
+        weatherData.city = result.city || "未知地区";
+        weatherData.type = result.data.type;
         weatherData.temperature = getTemperature(
-          data.low.replace("°C", ""),
-          data.high.replace("°C", "")
+          result.data.low.replace("°C", ""),
+          result.data.high.replace("°C", "")
         );
-        weatherData.fengxiang = data.fengxiang;
-        weatherData.fengli = data.fengli;
+        weatherData.fengxiang = result.data.fengxiang;
+        weatherData.fengli = result.data.fengli;
       } else {
-        throw new Error("获取天气数据失败");
+        throw new Error(result?.message || "天气数据异常");
       }
     } else {
-      // 获取 Adcode
+      // 完整的高德处理逻辑
       const adCode = await getAdcode(mainKey);
-      console.log(adCode);
+      console.log("高德地理位置响应：", adCode);
+      
       if (adCode.infocode !== "10000") {
-        throw new Error("地区查询失败");
+        throw new Error(`[${adCode.infocode}] ${adCode.info}`);
       }
+      
       weatherData.city = adCode.city;
-      // 获取天气信息
-      const result = await getAmapWeather(mainKey, adCode.adcode);
-      if (result && result.lives && result.lives[0]) {
-        weatherData.type = result.lives[0].weather;
-        weatherData.temperature = result.lives[0].temperature;
-        weatherData.fengxiang = result.lives[0].winddirection;
-        weatherData.fengli = result.lives[0].windpower;
+      const weatherRes = await getAmapWeather(mainKey, adCode.adcode);
+      console.log("高德天气响应：", weatherRes);
+      
+      if (weatherRes?.lives?.[0]) {
+        const liveData = weatherRes.lives[0];
+        weatherData.type = liveData.weather;
+        weatherData.temperature = liveData.temperature;
+        weatherData.fengxiang = liveData.winddirection;
+        weatherData.fengli = liveData.windpower;
       } else {
-        throw new Error("获取天气数据失败");
+        throw new Error(weatherRes?.info || "天气数据解析失败");
       }
     }
   } catch (error) {
-    console.error("天气信息获取失败:" + error);
-    onError("天气信息获取失败");
+    console.error("天气获取失败：", error);
+    onError(error.message);
+  } finally {
+    weatherData.loading = false;
   }
 };
 
-// 报错信息
 const onError = (message) => {
   ElMessage({
-    message,
-    icon: h(Error, {
-      theme: "filled",
-      fill: "#efefef",
-    }),
+    message: `天气错误: ${message}`,
+    icon: h(Error, { theme: "filled", fill: "#efefef" }),
   });
-  console.error(message);
 };
 
 onMounted(() => {
-  // 调用获取天气
   getWeatherData();
 });
 </script>
