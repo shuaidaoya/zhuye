@@ -7,36 +7,36 @@ import fetchJsonp from "fetch-jsonp";
 
 // 获取音乐播放列表
 export const getPlayerList = async (server, type, id) => {
-  const res = await fetch(
-    `${import.meta.env.VITE_SONG_API}?server=${server}&type=${type}&id=${id}`,
-  );
-  const data = await res.json();
+  const res = await fetch(
+    `${import.meta.env.VITE_SONG_API}?server=${server}&type=${type}&id=${id}`,
+  );
+  const data = await res.json();
 
-  if (data[0].url.startsWith("@")) {
-    // eslint-disable-next-line no-unused-vars
-    const [handle, jsonpCallback, jsonpCallbackFunction, url] = data[0].url.split("@").slice(1);
-    const jsonpData = await fetchJsonp(url).then((res) => res.json());
-    const domain = (
-      jsonpData.req_0.data.sip.find((i) => !i.startsWith("http://ws")) ||
-      jsonpData.req_0.data.sip[0]
-    ).replace("http://", "https://");
+  if (data[0].url.startsWith("@")) {
+    // eslint-disable-next-line no-unused-vars
+    const [handle, jsonpCallback, jsonpCallbackFunction, url] = data[0].url.split("@").slice(1);
+    const jsonpData = await fetchJsonp(url).then((res) => res.json());
+    const domain = (
+      jsonpData.req_0.data.sip.find((i) => !i.startsWith("http://ws")) ||
+      jsonpData.req_0.data.sip[0]
+    ).replace("http://", "https://");
 
-    return data.map((v, i) => ({
-      name: v.name || v.title,
-      artist: v.artist || v.author,
-      url: domain + jsonpData.req_0.data.midurlinfo[i].purl,
-      cover: v.cover || v.pic,
-      lrc: v.lrc,
-    }));
-  } else {
-    return data.map((v) => ({
-      name: v.name || v.title,
-      artist: v.artist || v.author,
-      url: v.url,
-      cover: v.cover || v.pic,
-      lrc: v.lrc,
-    }));
-  }
+    return data.map((v, i) => ({
+      name: v.name || v.title,
+      artist: v.artist || v.author,
+      url: domain + jsonpData.req_0.data.midurlinfo[i].purl,
+      cover: v.cover || v.pic,
+      lrc: v.lrc,
+    }));
+  } else {
+    return data.map((v) => ({
+      name: v.name || v.title,
+      artist: v.artist || v.author,
+      url: v.url,
+      cover: v.cover || v.pic,
+      lrc: v.lrc,
+    }));
+  }
 };
 
 /**
@@ -45,51 +45,49 @@ export const getPlayerList = async (server, type, id) => {
 
 // 获取一言数据
 export const getHitokoto = async () => {
-  const res = await fetch("https://v1.hitokoto.cn");
-  return await res.json();
+  const res = await fetch("https://v1.hitokoto.cn");
+  return await res.json();
 };
 
 /**
  * 天气
  */
 
-// 获取高德地理位置信息 
+// 获取高德地理位置信息
 export const getAdcode = async (key) => {
   const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
   return await res.json();
 };
- 
-// 获取高德地理天气信息 
+
+// 获取高德地理天气信息
 export const getWeather = async (key, city) => {
   const res = await fetch(
     `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${city}`,
   );
   return await res.json();
 };
- 
-// 获取其他天气数据 
-export const getOtherWeather = async () => {
-  const url = 'https://api.vvhan.com/api/weather';
+
+// 获取备用天气数据
+// 此处调用 https://api.vvhan.com/api/weather 接口，根据示例返回的数据进行判断
+export const getOtherWeather = async (params = {}) => {
+  // 默认接口地址，支持根据 city 或 ip 自动识别
+  let url = 'https://api.vvhan.com/api/weather';
+  const query = new URLSearchParams(params).toString();
+  if (query) {
+    url += "?" + query;
+  }
+  
   try {
     const res = await fetch(url);
     const data = await res.json();
-    if (data.success) {
-      // 将备用API数据格式化为类似高德API的结构 
-      const formattedData = {
-        lives: [{
-          weather: data.data.type,
-          temperature: getTemperature(data.data.low.replace("°C", ""), data.data.high.replace("°C", "")),
-          winddirection: data.data.fengxiang,
-          windpower: data.data.fengli.replace("级", "")
-        }]
-      };
-      return formattedData;
+    if (data.success === true) {
+      return data;
     } else {
-      console.error('获取天气数据失败:', data.message);
+      console.error("备用天气接口返回错误信息:", data.message);
       return null;
     }
   } catch (error) {
-    console.error('请求天气数据时出错:', error);
+    console.error("请求备用天气数据时出错:", error);
     return null;
   }
 };
