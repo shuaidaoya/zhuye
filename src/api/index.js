@@ -78,8 +78,12 @@ export const getOtherWeather = async (city = null) => {
     const data = await res.json();
     if (data.success) {
        console.log(data,'data' )
-      ElMessage({ message:  当前${data.city}-${data.data.week}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name} , duration: 14000// icon: h(SpaCandle,{ theme:"filled", fill: "#efefef" }),});
-      return data;
+      ElMessage({ 
+message:  当前${data.city}-${data.data.week}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name} , 
+duration: 14000，
+// icon: h(SpaCandle,{ theme:"filled", fill: "#efefef" }),
+});
+    return data;
     } else {
       console.error('获取天气数据失败:', data.message);
       return null;
