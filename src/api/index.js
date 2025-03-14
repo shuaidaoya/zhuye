@@ -53,30 +53,37 @@ export const getHitokoto = async () => {
  * 天气
  */
 
-// 获取高德地理位置信息
+// 获取高德地理位置信息 
 export const getAdcode = async (key) => {
-  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
-  return await res.json();
+  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
+  return await res.json();
 };
-
-// 获取高德地理天气信息
+ 
+// 获取高德地理天气信息 
 export const getWeather = async (key, city) => {
-  const res = await fetch(
-    `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${city}`,
-  );
-  return await res.json();
+  const res = await fetch(
+    `https://restapi.amap.com/v3/weather/weatherInfo?key=${key}&city=${city}`,
+  );
+  return await res.json();
 };
-
-// 获取其他天气数据
+ 
+// 获取其他天气数据 
 export const getOtherWeather = async () => {
-  // 这里实现获取备用天气数据的逻辑
-  // 示例：调用备用天气 API
   const url = 'https://api.vvhan.com/api/weather';
   try {
     const res = await fetch(url);
     const data = await res.json();
     if (data.success) {
-      return data;
+      // 将备用API数据格式化为类似高德API的结构 
+      const formattedData = {
+        lives: [{
+          weather: data.data.type,
+          temperature: getTemperature(data.data.low.replace("°C", ""), data.data.high.replace("°C", "")),
+          winddirection: data.data.fengxiang,
+          windpower: data.data.fengli.replace("级", "")
+        }]
+      };
+      return formattedData;
     } else {
       console.error('获取天气数据失败:', data.message);
       return null;
@@ -86,5 +93,3 @@ export const getOtherWeather = async () => {
     return null;
   }
 };
-
-
