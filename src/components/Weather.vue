@@ -106,7 +106,6 @@ const getWeatherData = async () => {
   }
 };
 
-
 // 报错信息
 const onError = (message) => {
   ElMessage({
