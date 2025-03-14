@@ -1,99 +1,99 @@
 <template>
-  <div class="weather" v-if="weatherData.adCode.city && weatherData.weather.weather">
+  <div class="weather" v-if="weatherData.weather">
     <span>{{ weatherData.adCode.city }}&nbsp;</span>
     <span>{{ weatherData.weather.weather }}&nbsp;</span>
     <span>{{ weatherData.weather.temperature }}℃</span>
     <span class="sm-hidden">
       &nbsp;{{
         weatherData.weather.winddirection?.endsWith("风")
-          ? weatherData.weather.winddirection
+          ? weatherData.weather.winddirection 
           : weatherData.weather.winddirection + "风"
       }}&nbsp;
     </span>
     <span class="sm-hidden">{{ weatherData.weather.windpower }}&nbsp;级</span>
   </div>
   <div class="weather" v-else>
-    <span>天气数据获取失败</span>
+    <span>天气信息获取失败</span>
   </div>
 </template>
-
+ 
 <script setup>
 import { getAdcode, getWeather, getOtherWeather } from "@/api";
 import { Error } from "@icon-park/vue-next";
-
-// 高德开发者 Key
+import { ref } from "vue";
+ 
+// 高德开发者 Key 
 const mainKey = import.meta.env.VITE_WEATHER_KEY;
-
-// 天气数据
-const weatherData = reactive({
-  adCode: {
-    city: null, // 城市
-    adcode: null, // 城市编码
-  },
-  weather: {
-    weather: null, // 天气现象
-    temperature: null, // 实时气温
-    winddirection: null, // 风向描述
-    windpower: null, // 风力级别
-  },
+ 
+// 天气数据 
+const weatherData = ref({
+  adCode: {
+    city: null, // 城市 
+    adcode: null, // 城市编码 
+  },
+  weather: {
+    weather: null, // 天气现象 
+    temperature: null, // 实时气温 
+    winddirection: null, // 风向描述 
+    windpower: null, // 风力级别 
+  },
 });
-
-// 取出天气平均值
+ 
+// 取出天气平均值 
 const getTemperature = (min, max) => {
-  try {
-    // 计算平均值并四舍五入
-    const average = (Number(min) + Number(max)) / 2;
-    return Math.round(average);
-  } catch (error) {
-    console.error("计算温度出现错误：", error);
-    return "NaN";
-  }
+  try {
+    // 计算平均值并四舍五入 
+    const average = (Number(min) + Number(max)) / 2;
+    return Math.round(average);
+  } catch (error) {
+    console.error("计算温度出现错误：", error);
+    return "NaN";
+  }
 };
-
-// 获取天气数据
+ 
+// 获取天气数据 
 const getWeatherData = async () => {
   try {
-    // 获取地理位置信息
+    // 获取地理位置信息 
     if (!mainKey) {
       console.log("未配置高德 API，使用备用天气接口");
       const result = await getOtherWeather();
       console.log("备用天气接口返回数据:", result);
       
-      if (result.success) {
-        // 备用 API 返回的数据结构
-        const data = result.data;
+      if (result && result.lives) {
+        // 提取天气信息 
+        const weatherInfo = result.lives[0];
         
-        weatherData.adCode = {
-          city: result.city || "未知地区", // 城市名称
+        weatherData.value.adCode = {
+          city: result.city || "未知地区", // 城市名称 
         };
         
-        weatherData.weather = {
-          weather: data.type, // 天气现象
-          temperature: getTemperature(data.low.replace("°C", ""), data.high.replace("°C", "")), // 温度
-          winddirection: data.fengxiang, // 风向
-          windpower: data.fengli.replace("级", ""), // 风力级别
+        weatherData.value.weather = {
+          weather: weatherInfo.weather,
+          temperature: weatherInfo.temperature,
+          winddirection: weatherInfo.winddirection,
+          windpower: weatherInfo.windpower,
         };
         
-        // 打印最终的 weatherData 对象，确保数据正确赋值
-        console.log("weatherData:", weatherData);
+        console.log("最终的 weatherData:", weatherData.value);
       } else {
         throw new Error("备用天气接口返回数据格式错误或数据获取失败");
       }
     } else {
-      // 获取 Adcode
+      // 获取 Adcode 
       const adCode = await getAdcode(mainKey);
       console.log("高德地理位置信息:", adCode);
       if (adCode.infocode !== "10000") {
         throw new Error("地区查询失败");
       }
-      weatherData.adCode = {
+      weatherData.value.adCode = {
         city: adCode.city,
         adcode: adCode.adcode,
       };
-      // 获取天气信息
-      const result = await getWeather(mainKey, weatherData.adCode.adcode);
+      // 获取天气信息 
+      const result = await getWeather(mainKey, weatherData.value.adCode.adcode);
       console.log("高德天气信息:", result);
-      weatherData.weather = {
+      weatherData.value.weather = {
         weather: result.lives[0].weather,
         temperature: result.lives[0].temperature,
         winddirection: result.lives[0].winddirection,
@@ -105,21 +105,21 @@ const getWeatherData = async () => {
     onError("天气信息获取失败");
   }
 };
-
-// 报错信息
+ 
+// 报错信息 
 const onError = (message) => {
-  ElMessage({
-    message,
-    icon: h(Error, {
-      theme: "filled",
-      fill: "#efefef",
-    }),
-  });
-  console.error(message);
+  ElMessage({
+    message,
+    icon: h(Error, {
+      theme: "filled",
+      fill: "#efefef",
+    }),
+  });
+  console.error(message);
 };
-
+ 
 onMounted(() => {
-  // 调用获取天气
-  getWeatherData();
+  // 调用获取天气 
+  getWeatherData();
 });
 </script>
