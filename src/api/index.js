@@ -52,7 +52,7 @@ export const getHitokoto = async () => {
 /**
  * 天气
  */
-/*
+
 // 获取高德地理位置信息
 export const getAdcode = async (key) => {
   const res = await fetch(`https://restapi.amap.com/v3/ip?key=${key}`);
@@ -66,22 +66,25 @@ export const getWeather = async (key, city) => {
   );
   return await res.json();
 };
-*/
-// 获取韩小韩天气 API
-// https://api.vvhan.com/api/weather
-export const getWeather = async () => {
-  const url = 'https://api.vvhan.com/api/weather';
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.success) {
-      return data;
-    } else {
-      console.error('获取天气数据失败:', data.message);
-      return null;
-    }
-  } catch (error) {
-    console.error('请求天气数据时出错:', error);
-    return null;
-  }
+
+// 获取其他天气数据
+export const getOtherWeather = async () => {
+  // 这里实现获取备用天气数据的逻辑
+  // 示例：调用备用天气 API
+  const url = 'https://api.vvhan.com/api/weather';
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.success) {
+      return data;
+    } else {
+      console.error('获取天气数据失败:', data.message);
+      return null;
+    }
+  } catch (error) {
+    console.error('请求天气数据时出错:', error);
+    return null;
+  }
 };
+
+
