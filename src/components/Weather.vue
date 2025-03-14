@@ -17,7 +17,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { getAdcode, getWeather, getOtherWeather } from "@/api";
 import { Error } from "@icon-park/vue-next";
@@ -106,6 +105,7 @@ const getWeatherData = async () => {
     onError("天气信息获取失败");
   }
 };
+
 
 // 报错信息
 const onError = (message) => {
