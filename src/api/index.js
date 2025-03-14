@@ -79,7 +79,7 @@ export const getOtherWeather = async (city = null) => {
       console.log(data, 'data');
       ElMessage({ 
         message: `当前${data.city}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度`,
-        duration: 14000,
+        duration: 3500,
       });
       return data;
     } else {
