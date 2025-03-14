@@ -17,6 +17,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { getAdcode, getWeather, getOtherWeather } from "@/api";
 import { Error } from "@icon-park/vue-next";
@@ -53,19 +54,18 @@ const getTemperature = (min, max) => {
 // 获取天气数据
 const getWeatherData = async () => {
   try {
-// 获取地理位置信息
+    // 获取地理位置信息
     if (!mainKey) {
       console.log("未配置高德 API，使用备用天气接口");
       const result = await getOtherWeather();
       console.log("备用天气接口返回数据:", result);
       
       if (result.success) {
-// 备用 API 返回的数据结构
+        // 备用 API 返回的数据结构
         const data = result.data;
         
         weatherData.adCode = {
           city: result.city || "未知地区", // 城市名称
-          // adcode: data.city.cityId, // 如果需要城市编码
         };
         
         weatherData.weather = {
@@ -74,11 +74,14 @@ const getWeatherData = async () => {
           winddirection: data.fengxiang, // 风向
           windpower: data.fengli.replace("级", ""), // 风力级别
         };
+        
+        // 打印最终的 weatherData 对象，确保数据正确赋值
+        console.log("weatherData:", weatherData);
       } else {
         throw new Error("备用天气接口返回数据格式错误或数据获取失败");
       }
     } else {
-// 获取 Adcode
+      // 获取 Adcode
       const adCode = await getAdcode(mainKey);
       console.log("高德地理位置信息:", adCode);
       if (adCode.infocode !== "10000") {
@@ -88,7 +91,7 @@ const getWeatherData = async () => {
         city: adCode.city,
         adcode: adCode.adcode,
       };
-// 获取天气信息
+      // 获取天气信息
       const result = await getWeather(mainKey, weatherData.adCode.adcode);
       console.log("高德天气信息:", result);
       weatherData.weather = {
@@ -103,7 +106,6 @@ const getWeatherData = async () => {
     onError("天气信息获取失败");
   }
 };
-
 
 // 报错信息
 const onError = (message) => {
