@@ -78,7 +78,7 @@ export const getOtherWeather = async (city = null) => {
     if (data.success) {
       console.log(data, 'data');
       ElMessage({ 
-        message: `当前${data.city}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name}`,
+        message: `当前${data.city}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度`,
         duration: 14000,
       });
       return data;
