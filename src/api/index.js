@@ -67,7 +67,7 @@ export const getWeather = async (key, city) => {
   return await res.json();
 };
 
-// 获取备用API天气数据
+// 获取备用API 韩小韩天气 API 
 export const getOtherWeather = async (city = null) => {
   let url = 'https://api.vvhan.com/api/weather';
   if (city) {
@@ -77,7 +77,9 @@ export const getOtherWeather = async (city = null) => {
     const res = await fetch(url);
     const data = await res.json();
     if (data.success) {
-      return data;
+       console.log(data,'data' )
+      ElMessage({ message:  当前${data.city}-${data.data.week}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name} , duration: 14000// icon: h(SpaCandle,{ theme:"filled", fill: "#efefef" }),});
+      return null;
     } else {
       console.error('获取天气数据失败:', data.message);
       return null;
