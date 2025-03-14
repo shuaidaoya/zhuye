@@ -67,27 +67,23 @@ export const getWeather = async (key, city) => {
   return await res.json();
 };
 
-// 获取备用天气数据
-// 此处调用 https://api.vvhan.com/api/weather 接口，根据示例返回的数据进行判断
-export const getOtherWeather = async (params = {}) => {
-  // 默认接口地址，支持根据 city 或 ip 自动识别
+// 获取备用API天气数据
+export const getOtherWeather = async (city = null) => {
   let url = 'https://api.vvhan.com/api/weather';
-  const query = new URLSearchParams(params).toString();
-  if (query) {
-    url += "?" + query;
+  if (city) {
+    url += `?city=${encodeURIComponent(city)}`;
   }
-  
   try {
     const res = await fetch(url);
     const data = await res.json();
-    if (data.success === true) {
+    if (data.success) {
       return data;
     } else {
-      console.error("备用天气接口返回错误信息:", data.message);
+      console.error('获取天气数据失败:', data.message);
       return null;
     }
   } catch (error) {
-    console.error("请求备用天气数据时出错:", error);
+    console.error('请求天气数据时出错:', error);
     return null;
   }
 };
