@@ -1,4 +1,3 @@
-// import axios from "axios";
 import fetchJsonp from "fetch-jsonp";
 
 /**
@@ -12,7 +11,7 @@ export const getPlayerList = async (server, type, id) => {
   );
   const data = await res.json();
 
-  if (data[0].url.startsWith("@")) {
+  if (data.length > 0 && data[0].url.startsWith("@")) {
     // eslint-disable-next-line no-unused-vars
     const [handle, jsonpCallback, jsonpCallbackFunction, url] = data[0].url.split("@").slice(1);
     const jsonpData = await fetchJsonp(url).then((res) => res.json());
@@ -77,13 +76,12 @@ export const getOtherWeather = async (city = null) => {
     const res = await fetch(url);
     const data = await res.json();
     if (data.success) {
-       console.log(data,'data' )
+      console.log(data, 'data');
       ElMessage({ 
-message:  当前${data.city}-${data.data.week}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name} , 
-duration: 14000，
-// icon: h(SpaCandle,{ theme:"filled", fill: "#efefef" }),
-});
-    return data;
+        message: `当前${data.city}-${data.data.week}，天气${data.data.type}，温度${data.data.low.replace("°C", "")}-${data.data.high.replace("°C", "")}摄氏度，空气质量${data.air.aqi_name}`,
+        duration: 14000,
+      });
+      return data;
     } else {
       console.error('获取天气数据失败:', data.message);
       return null;
